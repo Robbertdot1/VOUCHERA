@@ -120,8 +120,8 @@ label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;font-wei
   .icon-btn,
   .no-print{display:none!important}
 
-  /* Print voucher canvas */
-  #printArea{
+
+  printArea{
     display:block!important;
     width:148mm!important;
     min-height:210mm!important;
@@ -135,7 +135,7 @@ label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;font-wei
     font-size:9.5pt!important;
     line-height:1.35!important;
   }
-  #printArea *{box-sizing:border-box!important;color:#111!important}
+  printArea *{box-sizing:border-box!important;color:#111!important}
 
   .pv-header{
     display:flex!important;
@@ -309,30 +309,7 @@ label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;font-wei
     color:#666!important;
   }
 }
-"""
-
-# Find the existing @page / @media print section and replace it up to the next responsive section.
-pattern = re.compile(r'@page\s*\{.*?@media print\s*\{.*?\n\}', re.S)
-match = pattern.search(html)
-if match:
-    html = html[:match.start()] + new_print_css + html[match.end():]
-else:
-    # Insert before first responsive media query if exact block wasn't found.
-    idx = html.find("@media")
-    if idx == -1:
-        idx = html.find("</style>")
-    html = html[:idx] + new_print_css + "\n" + html[idx:]
-
-# Replace printArea's JS-generated markup with a professional A5 layout.
-old_marker = "document.getElementById('printArea').innerHTML="
-start = html.find(old_marker)
-if start != -1:
-    # Locate the statement through the following semicolon.
-    end = html.find(";", start)
-    # The generated HTML is a single JS statement in the existing app.
-    old_stmt = html[start:end+1]
-    new_stmt = """document.getElementById('printArea').innerHTML = `
-      <div class="pv-header">
+     <div class="pv-header">
         <div class="pv-brand">
           <div class="pv-company">${esc(settings.companyName || 'YOUR COMPANY NAME')}</div>
           <div class="pv-tagline">Official Voucher &amp; Transaction Record</div>
