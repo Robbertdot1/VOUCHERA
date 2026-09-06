@@ -1,0 +1,304 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Vouchera — Voucher Management System</title>
+<style>
+:root{
+  --bg:#f4f7fb;--surface:#fff;--surface2:#f8fafc;--text:#172033;--muted:#718096;
+  --primary:#315efb;--primary2:#1d4ed8;--border:#e5eaf2;--success:#16a34a;
+  --danger:#dc2626;--warning:#d97706;--shadow:0 8px 30px rgba(20,35,70,.08);
+}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;font-family:Inter,Segoe UI,Arial,sans-serif;background:var(--bg);color:var(--text)}
+button,input,select,textarea{font:inherit}button{cursor:pointer}
+.app{display:flex;min-height:100vh}
+.sidebar{width:250px;background:#101828;color:#fff;position:fixed;inset:0 auto 0 0;z-index:50;display:flex;flex-direction:column}
+.brand{height:72px;display:flex;align-items:center;gap:12px;padding:0 20px;border-bottom:1px solid rgba(255,255,255,.08)}
+.logo{width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#4f7cff,#7c3aed);display:grid;place-items:center;font-weight:900}
+.brand strong{font-size:19px}.brand small{display:block;color:#9aa7bc;font-size:10px;margin-top:2px}
+.nav{padding:15px 12px;overflow:auto}.nav-title{font-size:10px;text-transform:uppercase;color:#77839a;padding:12px 10px 7px;letter-spacing:1px}
+.nav button{width:100%;border:0;background:transparent;color:#aeb9ca;text-align:left;padding:11px 12px;border-radius:9px;margin:2px 0;display:flex;gap:11px;align-items:center}
+.nav button:hover,.nav button.active{background:#1d2939;color:#fff}.nav button span:first-child{width:21px;text-align:center}
+.sidebar-bottom{margin-top:auto;padding:14px;border-top:1px solid rgba(255,255,255,.08)}
+.main{margin-left:250px;width:calc(100% - 250px);min-width:0}
+.topbar{height:72px;background:var(--surface);border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;padding:0 28px;position:sticky;top:0;z-index:30}
+.top-left{display:flex;align-items:center;gap:12px}.menu-btn{display:none;border:0;background:var(--surface2);border-radius:9px;padding:9px}
+.page-title{font-size:20px;font-weight:750}.page-sub{font-size:12px;color:var(--muted);margin-top:2px}
+.top-actions{display:flex;align-items:center;gap:8px}.icon-btn{border:1px solid var(--border);background:var(--surface);width:38px;height:38px;border-radius:10px}
+.content{padding:25px;max-width:1600px;margin:auto}
+.page{display:none}.page.active{display:block}
+.grid{display:grid;gap:16px}.cards{grid-template-columns:repeat(4,minmax(0,1fr))}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:15px;box-shadow:var(--shadow)}
+.stat{padding:18px;position:relative;overflow:hidden}.stat .label{color:var(--muted);font-size:12px}.stat .value{font-size:25px;font-weight:800;margin-top:8px}.stat .mini{font-size:11px;margin-top:8px;color:var(--success)}
+.stat-icon{position:absolute;right:15px;top:17px;width:40px;height:40px;border-radius:11px;background:#edf2ff;display:grid;place-items:center}
+.section-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px}.section-head h2{font-size:16px;margin:0}.section-head p{font-size:12px;color:var(--muted);margin:4px 0 0}
+.two{grid-template-columns:1.45fr 1fr;margin-top:18px}.panel{padding:18px}.table-wrap{overflow:auto}
+table{width:100%;border-collapse:collapse;min-width:680px}th,td{padding:11px 10px;border-bottom:1px solid var(--border);text-align:left;font-size:12px;white-space:nowrap}th{color:var(--muted);font-weight:650;background:var(--surface2)}
+.badge{display:inline-flex;padding:4px 8px;border-radius:99px;font-size:10px;font-weight:700}.approved{background:#dcfce7;color:#166534}.pending{background:#fef3c7;color:#92400e}.draft{background:#e5e7eb;color:#374151}.cancelled{background:#fee2e2;color:#991b1b}
+.btn{border:1px solid var(--border);background:var(--surface);padding:9px 13px;border-radius:9px;font-size:12px;font-weight:650}.btn:hover{background:var(--surface2)}
+.btn.primary{background:var(--primary);border-color:var(--primary);color:#fff}.btn.primary:hover{background:var(--primary2)}
+.btn.danger{color:var(--danger)}.btn.success{color:var(--success)}
+.toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-bottom:15px}.search{min-width:220px;flex:1}
+input,select,textarea{width:100%;border:1px solid var(--border);background:var(--surface);color:var(--text);padding:10px 11px;border-radius:9px;outline:none}
+input:focus,select:focus,textarea:focus{border-color:#8aa4ff;box-shadow:0 0 0 3px rgba(49,94,251,.08)}
+label{font-size:11px;color:var(--muted);display:block;margin-bottom:5px;font-weight:650}.form-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:12px}.field.full{grid-column:1/-1}
+.voucher-lines{margin-top:18px}.line-actions{display:flex;gap:7px;align-items:end}.amount{text-align:right}.form-actions{display:flex;justify-content:flex-end;gap:8px;margin-top:18px}
+.notice{padding:11px 13px;border-radius:9px;background:#eef4ff;color:#2445a7;font-size:12px;margin-bottom:14px}
+.balance{display:flex;justify-content:flex-end;gap:25px;margin-top:12px;font-weight:750;font-size:13px}.balance .ok{color:var(--success)}.balance .bad{color:var(--danger)}
+.report-cards{grid-template-columns:repeat(3,1fr)}.report-card{padding:18px}.report-card h3{margin:0 0 7px;font-size:14px}.report-card p{margin:0;color:var(--muted);font-size:11px}.report-card .big{font-size:22px;font-weight:800;margin-top:13px}
+.empty{text-align:center;color:var(--muted);padding:35px;font-size:13px}
+.overlay{display:none;position:fixed;inset:0;background:rgba(15,23,42,.45);z-index:45}.overlay.show{display:block}
+.modal{display:none;position:fixed;z-index:60;inset:0;place-items:center;padding:18px}.modal.show{display:grid}.modal-box{background:var(--surface);border-radius:15px;width:min(900px,100%);max-height:92vh;overflow:auto;box-shadow:0 25px 70px rgba(0,0,0,.2)}.modal-head{padding:17px 20px;border-bottom:1px solid var(--border);display:flex;justify-content:space-between}.modal-body{padding:20px}
+.print-only{display:none}
+.toast{position:fixed;right:22px;bottom:22px;background:#101828;color:#fff;padding:12px 15px;border-radius:10px;font-size:12px;opacity:0;transform:translateY(10px);transition:.25s;z-index:100}.toast.show{opacity:1;transform:translateY(0)}
+@media(max-width:1100px){.cards{grid-template-columns:repeat(2,1fr)}.form-grid{grid-template-columns:repeat(2,1fr)}.report-cards{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:760px){
+ .sidebar{transform:translateX(-100%);transition:.25s}.sidebar.open{transform:translateX(0)}
+ .main{margin-left:0;width:100%;min-width:0}
+ .menu-btn{display:block}
+ .topbar{padding:0 12px;height:64px}
+ .content{padding:12px}
+ .page-title{font-size:16px}.page-sub{font-size:10px}
+ .cards,.two,.report-cards{grid-template-columns:1fr}
+ .form-grid{grid-template-columns:1fr}
+ .field.full{grid-column:auto}
+ .top-actions .hide-mobile{display:none}
+ .top-actions .btn.primary{padding:8px 9px;font-size:11px}
+ .card{border-radius:12px}
+ .panel{padding:13px}
+ .section-head{align-items:flex-start;flex-wrap:wrap}
+ .toolbar{display:grid;grid-template-columns:1fr 1fr}
+ .toolbar .search{grid-column:1/-1;min-width:0}
+ .toolbar input,.toolbar select,.toolbar .btn{min-width:0}
+ .stat .value{font-size:22px}
+ .table-wrap{width:100%;overflow-x:auto;-webkit-overflow-scrolling:touch}
+ table{min-width:650px}
+ .modal{padding:8px}.modal-box{max-height:96vh;width:100%}
+}
+@media(max-width:430px){
+ .toolbar{grid-template-columns:1fr}
+ .toolbar .search{grid-column:auto}
+ .top-left{min-width:0}.page-title,.page-sub{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+ .top-actions .btn.primary{font-size:10px;padding:8px}
+ .icon-btn{width:34px;height:34px}
+ .content{padding:9px}
+ .section-head h2{font-size:14px}
+}
+@page{
+ size:A5 portrait;
+ margin:10mm;
+}
+@media print{
+ html,body{width:148mm;min-height:210mm;background:#fff}
+ body{margin:0;font-family:Arial, sans-serif;color:#111}
+ .sidebar,.topbar,.no-print{display:none!important}
+ .main{margin:0;width:100%}
+ .content{padding:0;max-width:none}
+ .page{display:none!important}
+ .print-area{display:block!important;width:100%}
+ .print-only{display:block}
+ .card{box-shadow:none;border:0}
+ .modal{position:static!important;display:block!important;padding:0!important}
+ .modal-box{width:100%!important;max-width:none!important;max-height:none!important;overflow:visible!important;box-shadow:none!important;border-radius:0!important}
+ .modal-head{display:none!important}
+ .modal-body{padding:0!important}
+ .print-area h1{font-size:20px;margin:0 0 5px}
+ .print-area h2{font-size:17px}
+ .print-area p,.print-area td,.print-area th,.print-area label,.print-area b{font-size:10px}
+ .print-area table{min-width:0!important;width:100%;font-size:10px}
+ .print-area th,.print-area td{padding:5px 4px}
+ .print-area hr{margin:10px 0!important}
+}
+</style>
+</head>
+<body>
+<div class="app">
+<aside class="sidebar" id="sidebar">
+ <div class="brand"><div class="logo">V</div><div><strong>Vouchera</strong><small>Voucher Management</small></div></div>
+ <nav class="nav">
+  <div class="nav-title">Main</div>
+  <button class="active" data-page="dashboard"><span>▦</span>Dashboard</button>
+  <button data-page="create"><span>＋</span>Create Voucher</button>
+  <button data-page="history"><span>▤</span>Voucher History</button>
+  <div class="nav-title">Masters</div>
+  <button data-page="accounts"><span>◉</span>Accounts</button>
+  <button data-page="parties"><span>♙</span>Customers / Suppliers</button>
+  <button data-page="cashbank"><span>▣</span>Cash & Bank</button>
+  <div class="nav-title">Reports</div>
+  <button data-page="reports"><span>▥</span>Reports</button>
+  <button data-page="ledger"><span>≡</span>Ledger</button>
+  <button data-page="audit"><span>◷</span>Audit Log</button>
+ </nav>
+ <div class="sidebar-bottom"><button class="nav" style="border:0;background:transparent;color:#aeb9ca;width:100%;text-align:left;padding:10px" data-page="settings">⚙ Settings</button></div>
+</aside>
+<div class="overlay" id="overlay"></div>
+<main class="main">
+ <header class="topbar">
+  <div class="top-left"><button class="menu-btn" id="menuBtn">☰</button><div><div class="page-title" id="pageTitle">Dashboard</div><div class="page-sub" id="pageSub">Financial overview & activity</div></div></div>
+  <div class="top-actions"><button class="icon-btn" id="themeBtn" title="Toggle theme">☾</button><button class="btn primary" onclick="openCreate()">＋ New Voucher</button></div>
+ </header>
+ <section class="content">
+  <div class="page active" id="dashboard">
+   <div class="grid cards" id="stats"></div>
+   <div class="grid two">
+    <div class="card panel"><div class="section-head"><div><h2>Recent Vouchers</h2><p>Latest financial transactions</p></div><button class="btn" onclick="showPage('history')">View All</button></div><div class="table-wrap"><table><thead><tr><th>Voucher</th><th>Date</th><th>Type</th><th>Party</th><th>Amount</th><th>Status</th></tr></thead><tbody id="recentTable"></tbody></table></div></div>
+    <div class="card panel"><div class="section-head"><div><h2>Quick Summary</h2><p>Current account movement</p></div></div><div id="quickSummary"></div></div>
+   </div>
+  </div>
+
+  <div class="page" id="create">
+   <div class="card panel">
+    <div class="section-head"><div><h2 id="formHeading">Create Voucher</h2><p>Enter voucher details and debit/credit lines</p></div><button class="btn" onclick="resetVoucherForm()">Reset</button></div>
+    <div class="notice">Tip: Debit total and Credit total must be equal before saving an approved/posted voucher.</div>
+    <form id="voucherForm">
+     <input type="hidden" id="editId">
+     <div class="form-grid">
+      <div><label>Voucher Type</label><select id="voucherType"></select></div>
+      <div><label>Voucher No.</label><input id="voucherNo" readonly></div>
+      <div><label>Date</label><input type="date" id="voucherDate"></div>
+      <div><label>Status</label><select id="voucherStatus"><option>Draft</option><option>Pending</option><option>Approved</option><option>Cancelled</option></select></div>
+      <div><label>Party / Account</label><input id="party" placeholder="Customer, supplier or account"></div>
+      <div><label>Payment Method</label><select id="paymentMethod"><option>Cash</option><option>Bank</option><option>Cheque</option><option>Online Transfer</option><option>Other</option></select></div>
+      <div><label>Reference / Cheque No.</label><input id="reference" placeholder="Optional reference"></div>
+      <div><label>Prepared By</label><input id="preparedBy" placeholder="Name"></div>
+      <div class="field full"><label>Narration / Description</label><textarea id="narration" rows="2" placeholder="Write transaction description..."></textarea></div>
+     </div>
+     <div class="voucher-lines">
+      <div class="section-head"><div><h2>Voucher Lines</h2><p>Add debit and credit accounts</p></div><button type="button" class="btn primary" onclick="addLine()">＋ Add Line</button></div>
+      <div class="table-wrap"><table style="min-width:850px"><thead><tr><th style="width:30%">Account</th><th style="width:30%">Description</th><th style="width:18%">Debit</th><th style="width:18%">Credit</th><th></th></tr></thead><tbody id="linesBody"></tbody></table></div>
+      <div class="balance"><span>Debit: <b id="debitTotal">0.00</b></span><span>Credit: <b id="creditTotal">0.00</b></span><span id="balanceState" class="bad">Not Balanced</span></div>
+     </div>
+     <div class="form-actions"><button type="button" class="btn" onclick="showPage('dashboard')">Cancel</button><button type="button" class="btn" onclick="saveVoucher('Draft')">Save Draft</button><button type="button" class="btn primary" onclick="saveVoucher()">Save Voucher</button></div>
+    </form>
+   </div>
+  </div>
+
+  <div class="page" id="history">
+   <div class="card panel"><div class="section-head"><div><h2>Voucher History</h2><p>Search, filter, edit, print and export transactions</p></div><button class="btn" onclick="exportCSV()">↓ Export CSV</button></div>
+    <div class="toolbar"><input class="search" id="historySearch" placeholder="Search voucher no, party, description..."><select id="historyType"><option value="">All Types</option></select><select id="historyStatus"><option value="">All Statuses</option><option>Draft</option><option>Pending</option><option>Approved</option><option>Cancelled</option></select><input type="date" id="dateFrom"><input type="date" id="dateTo"></div>
+    <div class="table-wrap"><table><thead><tr><th>Voucher No.</th><th>Date</th><th>Type</th><th>Party</th><th>Method</th><th>Debit</th><th>Credit</th><th>Status</th><th>Actions</th></tr></thead><tbody id="historyTable"></tbody></table></div>
+   </div>
+  </div>
+
+  <div class="page" id="accounts">
+   <div class="card panel"><div class="section-head"><div><h2>Chart of Accounts</h2><p>Manage accounts used in voucher lines</p></div><button class="btn primary" onclick="addAccount()">＋ Add Account</button></div>
+   <div class="table-wrap"><table><thead><tr><th>Code</th><th>Account Name</th><th>Type</th><th>Opening</th><th>Debit</th><th>Credit</th><th>Balance</th><th>Action</th></tr></thead><tbody id="accountsTable"></tbody></table></div></div>
+  </div>
+
+  <div class="page" id="parties">
+   <div class="card panel"><div class="section-head"><div><h2>Customers & Suppliers</h2><p>Party master and transaction balances</p></div><button class="btn primary" onclick="addParty()">＋ Add Party</button></div>
+   <div class="table-wrap"><table><thead><tr><th>Name</th><th>Type</th><th>Phone</th><th>Opening Balance</th><th>Transactions</th><th>Action</th></tr></thead><tbody id="partiesTable"></tbody></table></div></div>
+  </div>
+
+  <div class="page" id="cashbank">
+   <div class="grid cards" id="cashCards"></div>
+   <div class="card panel" style="margin-top:16px"><div class="section-head"><div><h2>Cash & Bank Accounts</h2><p>Balances are calculated from posted/approved vouchers</p></div></div><div class="table-wrap"><table><thead><tr><th>Account</th><th>Type</th><th>Opening Balance</th><th>Debit</th><th>Credit</th><th>Current Balance</th></tr></thead><tbody id="cashTable"></tbody></table></div></div>
+  </div>
+
+  <div class="page" id="reports">
+   <div class="card panel"><div class="section-head"><div><h2>Financial Reports</h2><p>Generate summaries from voucher history</p></div><button class="btn" onclick="window.print()">🖨 Print Report</button></div>
+    <div class="toolbar"><input type="date" id="reportFrom"><input type="date" id="reportTo"><select id="reportType"><option value="">All Voucher Types</option></select><button class="btn primary" onclick="generateReports()">Generate</button></div>
+    <div class="grid report-cards" id="reportCards"></div>
+   </div>
+   <div class="card panel" style="margin-top:16px"><div class="section-head"><div><h2>Transaction Summary</h2><p>Filtered report details</p></div></div><div class="table-wrap"><table><thead><tr><th>Voucher</th><th>Date</th><th>Type</th><th>Party</th><th>Amount</th><th>Status</th></tr></thead><tbody id="reportTable"></tbody></table></div></div>
+  </div>
+
+  <div class="page" id="ledger">
+   <div class="card panel"><div class="section-head"><div><h2>Account Ledger</h2><p>Account-wise debit and credit movement</p></div><select id="ledgerAccount" style="max-width:280px"></select></div>
+   <div class="table-wrap"><table><thead><tr><th>Date</th><th>Voucher</th><th>Description</th><th>Debit</th><th>Credit</th><th>Running Balance</th></tr></thead><tbody id="ledgerTable"></tbody></table></div></div>
+  </div>
+
+  <div class="page" id="audit">
+   <div class="card panel"><div class="section-head"><div><h2>Audit Log</h2><p>System activity history</p></div><button class="btn danger" onclick="clearAudit()">Clear Logs</button></div>
+   <div class="table-wrap"><table><thead><tr><th>Date & Time</th><th>Action</th><th>Reference</th><th>Details</th></tr></thead><tbody id="auditTable"></tbody></table></div></div>
+  </div>
+
+  <div class="page" id="settings">
+   <div class="card panel"><div class="section-head"><div><h2>Settings</h2><p>Basic company and data controls</p></div></div>
+    <div class="form-grid"><div><label>Company Name</label><input id="companyName" value="Your Company"></div><div><label>Currency</label><input id="currency" value="PKR"></div><div><label>Financial Year</label><input id="financialYear" value="2026-27"></div><div><label>Default Prepared By</label><input id="defaultUser" value="Admin"></div></div>
+    <div class="form-actions"><button class="btn primary" onclick="saveSettings()">Save Settings</button><button class="btn" onclick="backupData()">Backup JSON</button><button class="btn danger" onclick="resetAll()">Reset All Data</button></div>
+   </div>
+  </div>
+ </section>
+</main>
+</div>
+
+<div class="modal" id="viewModal"><div class="modal-box"><div class="modal-head"><strong>Voucher Details</strong><button class="btn" onclick="closeModal()">✕</button></div><div class="modal-body" id="voucherPreview"></div></div></div>
+<div class="toast" id="toast"></div>
+
+<script>
+const TYPES=["Payment Voucher","Receipt Voucher","Journal Voucher","Contra Voucher","Purchase Voucher","Sales Voucher","Expense Voucher","Debit Note","Credit Note","Advance Payment","Advance Receipt","Petty Cash","Bank Deposit","Bank Withdrawal"];
+const defaultAccounts=[
+ {code:"1000",name:"Cash",type:"Asset",opening:0},{code:"1010",name:"Bank",type:"Asset",opening:0},
+ {code:"1100",name:"Accounts Receivable",type:"Asset",opening:0},{code:"2000",name:"Accounts Payable",type:"Liability",opening:0},
+ {code:"3000",name:"Capital",type:"Equity",opening:0},{code:"4000",name:"Sales Revenue",type:"Income",opening:0},
+ {code:"5000",name:"Purchases",type:"Expense",opening:0},{code:"5100",name:"Office Expense",type:"Expense",opening:0},
+ {code:"5200",name:"Utilities Expense",type:"Expense",opening:0},{code:"5300",name:"Salaries Expense",type:"Expense",opening:0}
+];
+let vouchers=JSON.parse(localStorage.getItem("vouchers")||"[]");
+let accounts=JSON.parse(localStorage.getItem("accounts")||"null")||defaultAccounts;
+let parties=JSON.parse(localStorage.getItem("parties")||"[]");
+let audit=JSON.parse(localStorage.getItem("audit")||"[]");
+let settings=JSON.parse(localStorage.getItem("settings")||"null")||{company:"Your Company",currency:"PKR",year:"2026-27",user:"Admin"};
+let lineCounter=0;
+
+function saveDB(){localStorage.setItem("vouchers",JSON.stringify(vouchers));localStorage.setItem("accounts",JSON.stringify(accounts));localStorage.setItem("parties",JSON.stringify(parties));localStorage.setItem("audit",JSON.stringify(audit));localStorage.setItem("settings",JSON.stringify(settings))}
+function money(n){return `${settings.currency} ${Number(n||0).toLocaleString("en-PK",{minimumFractionDigits:2,maximumFractionDigits:2})}`}
+function dateNow(){return new Date().toISOString().slice(0,10)}
+function nextNo(type="Voucher"){let p={"Payment Voucher":"PV","Receipt Voucher":"RV","Journal Voucher":"JV","Contra Voucher":"CV","Purchase Voucher":"PUR","Sales Voucher":"SAL","Expense Voucher":"EXP","Debit Note":"DN","Credit Note":"CN","Advance Payment":"AP","Advance Receipt":"AR","Petty Cash":"PC","Bank Deposit":"BD","Bank Withdrawal":"BW"}[type]||"V";let max=vouchers.filter(v=>v.no.startsWith(p+"-")).map(v=>parseInt(v.no.split("-")[1])||0).reduce((a,b)=>Math.max(a,b),0);return `${p}-${String(max+1).padStart(5,"0")}`}
+function log(action,ref,details){audit.unshift({time:new Date().toLocaleString(),action,ref,details});audit=audit.slice(0,500);saveDB()}
+function toast(msg){let t=document.getElementById("toast");t.textContent=msg;t.classList.add("show");setTimeout(()=>t.classList.remove("show"),2200)}
+
+const titles={dashboard:["Dashboard","Financial overview & activity"],create:["Create Voucher","Create and manage financial vouchers"],history:["Voucher History","Search and manage all vouchers"],accounts:["Accounts","Chart of accounts and balances"],parties:["Customers / Suppliers","Manage your business parties"],cashbank:["Cash & Bank","Cash and bank balances"],reports:["Reports","Financial summaries and transaction reports"],ledger:["Ledger","Account-wise transaction ledger"],audit:["Audit Log","System activity history"],settings:["Settings","Company and application settings"]};
+function showPage(id){document.querySelectorAll(".page").forEach(p=>p.classList.toggle("active",p.id===id));document.querySelectorAll(".nav button[data-page]").forEach(b=>b.classList.toggle("active",b.dataset.page===id));document.getElementById("pageTitle").textContent=titles[id][0];document.getElementById("pageSub").textContent=titles[id][1];document.getElementById("sidebar").classList.remove("open");document.getElementById("overlay").classList.remove("show");if(id==="dashboard")renderDashboard();if(id==="history")renderHistory();if(id==="accounts")renderAccounts();if(id==="parties")renderParties();if(id==="cashbank")renderCashBank();if(id==="reports")generateReports();if(id==="ledger")renderLedger();if(id==="audit")renderAudit();if(id==="settings")loadSettings()}
+document.querySelectorAll("[data-page]").forEach(b=>b.addEventListener("click",()=>showPage(b.dataset.page)));
+document.getElementById("menuBtn").onclick=()=>{document.getElementById("sidebar").classList.add("open");document.getElementById("overlay").classList.add("show")};
+document.getElementById("overlay").onclick=()=>{document.getElementById("sidebar").classList.remove("open");document.getElementById("overlay").classList.remove("show")};
+
+function populateTypes(){let s=document.getElementById("voucherType");let ht=document.getElementById("historyType");let rt=document.getElementById("reportType");let opts=TYPES.map(x=>`<option>${x}</option>`).join("");s.innerHTML=opts;ht.innerHTML='<option value="">All Types</option>'+opts;rt.innerHTML='<option value="">All Voucher Types</option>'+opts}
+function openCreate(){showPage("create");resetVoucherForm()}
+function resetVoucherForm(){document.getElementById("editId").value="";document.getElementById("formHeading").textContent="Create Voucher";document.getElementById("voucherType").value="Payment Voucher";document.getElementById("voucherNo").value=nextNo("Payment Voucher");document.getElementById("voucherDate").value=dateNow();document.getElementById("voucherStatus").value="Draft";document.getElementById("party").value="";document.getElementById("reference").value="";document.getElementById("preparedBy").value=settings.user;document.getElementById("narration").value="";document.getElementById("linesBody").innerHTML="";addLine();addLine()}
+document.getElementById("voucherType").addEventListener("change",()=>{if(!document.getElementById("editId").value)document.getElementById("voucherNo").value=nextNo(document.getElementById("voucherType").value)});
+function accountOptions(){return accounts.map(a=>`<option value="${a.name}">${a.code} — ${a.name}</option>`).join("")}
+function addLine(data={}){lineCounter++;let tr=document.createElement("tr");tr.dataset.line=lineCounter;tr.innerHTML=`<td><select class="line-account">${accountOptions()}</select></td><td><input class="line-desc" placeholder="Line description" value="${data.desc||""}"></td><td><input type="number" min="0" step="0.01" class="line-debit amount" value="${data.debit||""}"></td><td><input type="number" min="0" step="0.01" class="line-credit amount" value="${data.credit||""}"></td><td><button type="button" class="btn danger" onclick="this.closest('tr').remove();calcTotals()">✕</button></td>`;document.getElementById("linesBody").appendChild(tr);if(data.account)tr.querySelector(".line-account").value=data.account;tr.querySelectorAll("input").forEach(x=>x.addEventListener("input",calcTotals));calcTotals()}
+function calcTotals(){let d=[...document.querySelectorAll(".line-debit")].reduce((s,x)=>s+(+x.value||0),0),c=[...document.querySelectorAll(".line-credit")].reduce((s,x)=>s+(+x.value||0),0);document.getElementById("debitTotal").textContent=d.toFixed(2);document.getElementById("creditTotal").textContent=c.toFixed(2);let st=document.getElementById("balanceState");st.textContent=Math.abs(d-c)<.005?"Balanced":"Not Balanced";st.className=Math.abs(d-c)<.005?"ok":"bad";return{d,c}}
+function saveVoucher(forceStatus){let {d,c}=calcTotals();if(!document.getElementById("party").value.trim()&&!document.getElementById("narration").value.trim()){toast("Add party or description");return}if(!d&&!c){toast("Add voucher amounts");return}let status=forceStatus||document.getElementById("voucherStatus").value;if(status!=="Draft"&&Math.abs(d-c)>=.005){toast("Debit and credit must balance");return}let lines=[...document.querySelectorAll("#linesBody tr")].map(tr=>({account:tr.querySelector(".line-account").value,desc:tr.querySelector(".line-desc").value,debit:+tr.querySelector(".line-debit").value||0,credit:+tr.querySelector(".line-credit").value||0}));let id=document.getElementById("editId").value;let old=id&&vouchers.find(v=>v.id===id);let v={id:id||Date.now().toString(),no:document.getElementById("voucherNo").value,date:document.getElementById("voucherDate").value,type:document.getElementById("voucherType").value,status,party:document.getElementById("party").value,method:document.getElementById("paymentMethod").value,reference:document.getElementById("reference").value,preparedBy:document.getElementById("preparedBy").value||settings.user,narration:document.getElementById("narration").value,lines,debit:d,credit:c,updated:new Date().toISOString()};if(old)vouchers=vouchers.map(x=>x.id===id?v:x);else vouchers.unshift(v);saveDB();log(old?"Edited":"Created",v.no,`${v.type} — ${money(Math.max(d,c))}`);toast(old?"Voucher updated":"Voucher saved");resetVoucherForm();showPage("history")}
+function renderDashboard(){let approved=vouchers.filter(v=>v.status==="Approved");let debit=approved.reduce((s,v)=>s+v.debit,0),credit=approved.reduce((s,v)=>s+v.credit,0);let receipts=approved.filter(v=>["Receipt Voucher","Advance Receipt","Sales Voucher","Credit Note"].includes(v.type)).reduce((s,v)=>s+v.credit||s,0);let payments=approved.filter(v=>["Payment Voucher","Advance Payment","Purchase Voucher","Expense Voucher","Debit Note"].includes(v.type)).reduce((s,v)=>s+v.debit||s,0);document.getElementById("stats").innerHTML=[["Total Vouchers",vouchers.length,"▤"],["Total Debit",money(debit),"↘"],["Total Credit",money(credit),"↗"],["Net Movement",money(debit-credit),"◈"]].map(x=>`<div class="card stat"><div class="stat-icon">${x[2]}</div><div class="label">${x[0]}</div><div class="value">${x[1]}</div><div class="mini">${approved.length} approved transactions</div></div>`).join("");document.getElementById("recentTable").innerHTML=vouchers.slice(0,8).map(rowHTML).join("")||`<tr><td colspan="6" class="empty">No vouchers yet.</td></tr>`;document.getElementById("quickSummary").innerHTML=`<div style="padding:12px 0;border-bottom:1px solid var(--border)"><span class="label">Approved Debit</span><div style="font-weight:800;margin-top:5px">${money(debit)}</div></div><div style="padding:12px 0;border-bottom:1px solid var(--border)"><span class="label">Approved Credit</span><div style="font-weight:800;margin-top:5px">${money(credit)}</div></div><div style="padding:12px 0"><span class="label">Net Position</span><div style="font-weight:800;margin-top:5px">${money(credit-debit)}</div></div>`}
+function statusBadge(s){return `<span class="badge ${s.toLowerCase()}">${s}</span>`}
+function rowHTML(v){return `<tr><td><b>${v.no}</b></td><td>${v.date}</td><td>${v.type}</td><td>${v.party||"—"}</td><td>${money(Math.max(v.debit,v.credit))}</td><td>${statusBadge(v.status)}</td></tr>`}
+function filteredVouchers(){let q=(document.getElementById("historySearch")?.value||"").toLowerCase(),type=document.getElementById("historyType")?.value||"",status=document.getElementById("historyStatus")?.value||"",from=document.getElementById("dateFrom")?.value||"",to=document.getElementById("dateTo")?.value||"";return vouchers.filter(v=>(!q||`${v.no} ${v.party} ${v.narration}`.toLowerCase().includes(q))&&(!type||v.type===type)&&(!status||v.status===status)&&(!from||v.date>=from)&&(!to||v.date<=to))}
+function renderHistory(){document.getElementById("historyTable").innerHTML=filteredVouchers().map(v=>`<tr><td><b>${v.no}</b></td><td>${v.date}</td><td>${v.type}</td><td>${v.party||"—"}</td><td>${v.method}</td><td>${money(v.debit)}</td><td>${money(v.credit)}</td><td>${statusBadge(v.status)}</td><td><button class="btn" onclick="viewVoucher('${v.id}')">View</button> <button class="btn" onclick="editVoucher('${v.id}')">Edit</button> <button class="btn" onclick="printVoucher('${v.id}')">Print</button> <button class="btn danger" onclick="deleteVoucher('${v.id}')">Delete</button></td></tr>`).join("")||`<tr><td colspan="9" class="empty">No matching vouchers.</td></tr>`}
+["historySearch","historyType","historyStatus","dateFrom","dateTo"].forEach(id=>document.getElementById(id).addEventListener("input",renderHistory));
+function editVoucher(id){let v=vouchers.find(x=>x.id===id);if(!v)return;showPage("create");document.getElementById("editId").value=v.id;document.getElementById("formHeading").textContent="Edit Voucher";document.getElementById("voucherType").value=v.type;document.getElementById("voucherNo").value=v.no;document.getElementById("voucherDate").value=v.date;document.getElementById("voucherStatus").value=v.status;document.getElementById("party").value=v.party;document.getElementById("paymentMethod").value=v.method;document.getElementById("reference").value=v.reference;document.getElementById("preparedBy").value=v.preparedBy;document.getElementById("narration").value=v.narration;document.getElementById("linesBody").innerHTML="";v.lines.forEach(addLine)}
+function deleteVoucher(id){let v=vouchers.find(x=>x.id===id);if(!v||!confirm(`Delete ${v.no}?`))return;vouchers=vouchers.filter(x=>x.id!==id);saveDB();log("Deleted",v.no,"Voucher deleted");renderHistory();toast("Voucher deleted")}
+function viewVoucher(id){let v=vouchers.find(x=>x.id===id);if(!v)return;document.getElementById("voucherPreview").innerHTML=`<div class="print-area"><div class="print-only"><h1>${settings.company}</h1></div><div style="display:flex;justify-content:space-between;gap:20px"><div><h2 style="margin:0">${v.type}</h2><p style="color:var(--muted)">${settings.company}</p></div><div style="text-align:right"><b>${v.no}</b><br>${v.date}<br>${statusBadge(v.status)}</div></div><hr style="border:0;border-top:1px solid var(--border);margin:18px 0"><div class="form-grid"><div><label>Party / Account</label><b>${v.party||"—"}</b></div><div><label>Payment Method</label><b>${v.method}</b></div><div><label>Reference</label><b>${v.reference||"—"}</b></div><div><label>Prepared By</label><b>${v.preparedBy}</b></div></div><p style="margin-top:18px"><b>Narration:</b> ${v.narration||"—"}</p><table style="min-width:0;margin-top:18px"><thead><tr><th>Account</th><th>Description</th><th>Debit</th><th>Credit</th></tr></thead><tbody>${v.lines.map(l=>`<tr><td>${l.account}</td><td>${l.desc||"—"}</td><td>${money(l.debit)}</td><td>${money(l.credit)}</td></tr>`).join("")}</tbody><tfoot><tr><th colspan="2">Total</th><th>${money(v.debit)}</th><th>${money(v.credit)}</th></tr></tfoot></table><div style="display:flex;justify-content:space-between;margin-top:60px"><span>Prepared By: __________</span><span>Approved By: __________</span></div></div><div class="form-actions no-print"><button class="btn primary" onclick="printVoucher('${v.id}')">🖨 Print</button><button class="btn" onclick="closeModal()">Close</button></div>`;document.getElementById("viewModal").classList.add("show")}
+function closeModal(){document.getElementById("viewModal").classList.remove("show")}
+function printVoucher(id){viewVoucher(id);setTimeout(()=>window.print(),150)}
+function renderAccounts(){let rows=accounts.map(a=>{let mov=accountMovement(a.name);let bal=a.opening+mov.debit-mov.credit;return `<tr><td>${a.code}</td><td><b>${a.name}</b></td><td>${a.type}</td><td>${money(a.opening)}</td><td>${money(mov.debit)}</td><td>${money(mov.credit)}</td><td>${money(bal)}</td><td><button class="btn" onclick="editAccount('${a.code}')">Edit</button></td></tr>`}).join("");document.getElementById("accountsTable").innerHTML=rows}
+function accountMovement(name){let arr=vouchers.filter(v=>v.status==="Approved").flatMap(v=>v.lines.map(l=>({...l,date:v.date,no:v.no,narration:v.narration}))).filter(l=>l.account===name);return{debit:arr.reduce((s,l)=>s+l.debit,0),credit:arr.reduce((s,l)=>s+l.credit,0)}}
+function addAccount(){let name=prompt("Account name:");if(!name)return;let type=prompt("Type (Asset/Liability/Equity/Income/Expense):","Expense")||"Expense";let code=String(1000+accounts.length*10);accounts.push({code,name,type,opening:0});saveDB();log("Created",code,`Account ${name}`);renderAccounts();populateLineAccounts();toast("Account added")}
+function editAccount(code){let a=accounts.find(x=>x.code===code);if(!a)return;let n=prompt("Account name:",a.name);if(n){a.name=n;saveDB();renderAccounts();populateLineAccounts();toast("Account updated")}}
+function populateLineAccounts(){document.querySelectorAll(".line-account").forEach(s=>{let val=s.value;s.innerHTML=accountOptions();s.value=val})}
+function addParty(){let name=prompt("Party name:");if(!name)return;let type=prompt("Type (Customer/Supplier):","Customer")||"Customer";let phone=prompt("Phone:","")||"";parties.push({id:Date.now(),name,type,phone,opening:0});saveDB();log("Created",name,`${type} party`);renderParties();toast("Party added")}
+function renderParties(){document.getElementById("partiesTable").innerHTML=parties.map(p=>`<tr><td><b>${p.name}</b></td><td>${p.type}</td><td>${p.phone||"—"}</td><td>${money(p.opening)}</td><td>${vouchers.filter(v=>v.party===p.name).length}</td><td><button class="btn danger" onclick="deleteParty(${p.id})">Delete</button></td></tr>`).join("")||`<tr><td colspan="6" class="empty">No parties added.</td></tr>`}
+function deleteParty(id){if(!confirm("Delete party?"))return;parties=parties.filter(p=>p.id!==id);saveDB();renderParties()}
+function renderCashBank(){let names=["Cash","Bank"],data=names.map(n=>{let a=accounts.find(x=>x.name===n)||{opening:0};let m=accountMovement(n);return{name:n,opening:a.opening||0,debit:m.debit,credit:m.credit,balance:(a.opening||0)+m.debit-m.credit}});document.getElementById("cashCards").innerHTML=data.map(x=>`<div class="card stat"><div class="stat-icon">${x.name==="Cash"?"▣":"▤"}</div><div class="label">${x.name} Balance</div><div class="value">${money(x.balance)}</div><div class="mini">Debit ${money(x.debit)} · Credit ${money(x.credit)}</div></div>`).join("");document.getElementById("cashTable").innerHTML=data.map(x=>`<tr><td>${x.name}</td><td>Asset</td><td>${money(x.opening)}</td><td>${money(x.debit)}</td><td>${money(x.credit)}</td><td><b>${money(x.balance)}</b></td></tr>`).join("")}
+function generateReports(){let from=document.getElementById("reportFrom").value,to=document.getElementById("reportTo").value,type=document.getElementById("reportType").value;let arr=vouchers.filter(v=>(!from||v.date>=from)&&(!to||v.date<=to)&&(!type||v.type===type));let approved=arr.filter(v=>v.status==="Approved"),debit=approved.reduce((s,v)=>s+v.debit,0),credit=approved.reduce((s,v)=>s+v.credit,0);document.getElementById("reportCards").innerHTML=[["Transactions",arr.length],["Total Debit",money(debit)],["Total Credit",money(credit)],["Net Debit",money(debit-credit)],["Approved",approved.length],["Pending / Draft",arr.filter(v=>v.status!=="Approved"&&v.status!=="Cancelled").length]].map(x=>`<div class="card report-card"><h3>${x[0]}</h3><p>Filtered period</p><div class="big">${x[1]}</div></div>`).join("");document.getElementById("reportTable").innerHTML=arr.map(v=>`<tr><td>${v.no}</td><td>${v.date}</td><td>${v.type}</td><td>${v.party||"—"}</td><td>${money(Math.max(v.debit,v.credit))}</td><td>${statusBadge(v.status)}</td></tr>`).join("")||`<tr><td colspan="6" class="empty">No transactions in selected period.</td></tr>`}
+function renderLedger(){let sel=document.getElementById("ledgerAccount");let current=sel.value;sel.innerHTML=accounts.map(a=>`<option value="${a.name}">${a.code} — ${a.name}</option>`).join("");if(current)sel.value=current;let name=sel.value||accounts[0]?.name||"";let a=accounts.find(x=>x.name===name)||{opening:0};let rows=vouchers.filter(v=>v.status==="Approved").flatMap(v=>v.lines.filter(l=>l.account===name).map(l=>({...l,date:v.date,no:v.no,narration:v.narration}))).sort((x,y)=>x.date.localeCompare(y.date));let balance=a.opening||0;document.getElementById("ledgerTable").innerHTML=rows.map(l=>{balance+=l.debit-l.credit;return `<tr><td>${l.date}</td><td>${l.no}</td><td>${l.desc||l.narration||"—"}</td><td>${money(l.debit)}</td><td>${money(l.credit)}</td><td>${money(balance)}</td></tr>`}).join("")||`<tr><td colspan="6" class="empty">No posted transactions for this account.</td></tr>`}
+document.getElementById("ledgerAccount").addEventListener("change",renderLedger);
+function renderAudit(){document.getElementById("auditTable").innerHTML=audit.map(x=>`<tr><td>${x.time}</td><td>${x.action}</td><td>${x.ref}</td><td>${x.details}</td></tr>`).join("")||`<tr><td colspan="4" class="empty">No activity yet.</td></tr>`}
+function clearAudit(){if(confirm("Clear audit logs?")){audit=[];saveDB();renderAudit();toast("Audit logs cleared")}}
+function exportCSV(){let arr=filteredVouchers();let head=["Voucher No","Date","Type","Party","Payment Method","Debit","Credit","Status","Reference","Narration"];let rows=arr.map(v=>[v.no,v.date,v.type,v.party,v.method,v.debit,v.credit,v.status,v.reference,v.narration].map(csv).join(","));let blob=new Blob([[head.map(csv).join(","),...rows].join("\\n")],{type:"text/csv"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="voucher-history.csv";a.click();URL.revokeObjectURL(a.href);log("Exported","CSV","Voucher history exported");toast("CSV exported")}
+function csv(x){return `"${String(x??"").replaceAll('"','""')}"`}
+function backupData(){let blob=new Blob([JSON.stringify({vouchers,accounts,parties,audit,settings},null,2)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="vouchera-backup.json";a.click();URL.revokeObjectURL(a.href);toast("Backup downloaded")}
+function resetAll(){if(!confirm("This will delete all vouchers, parties, accounts and logs. Continue?"))return;localStorage.clear();location.reload()}
+function loadSettings(){document.getElementById("companyName").value=settings.company;document.getElementById("currency").value=settings.currency;document.getElementById("financialYear").value=settings.year;document.getElementById("defaultUser").value=settings.user}
+function saveSettings(){settings={company:document.getElementById("companyName").value||"Your Company",currency:document.getElementById("currency").value||"PKR",year:document.getElementById("financialYear").value||"2026-27",user:document.getElementById("defaultUser").value||"Admin"};saveDB();toast("Settings saved");renderDashboard()}
+document.getElementById("themeBtn").onclick=()=>{let dark=document.body.dataset.theme!=="dark";document.body.dataset.theme=dark?"dark":"";document.documentElement.style.setProperty("--bg",dark?"#0b1220":"#f4f7fb");document.documentElement.style.setProperty("--surface",dark?"#111827":"#fff");document.documentElement.style.setProperty("--surface2",dark?"#172033":"#f8fafc");document.documentElement.style.setProperty("--text",dark?"#e5e7eb":"#172033");document.documentElement.style.setProperty("--muted",dark?"#94a3b8":"#718096");document.documentElement.style.setProperty("--border",dark?"#263244":"#e5eaf2");document.getElementById("themeBtn").textContent=dark?"☀":"☾";localStorage.setItem("theme",dark?"dark":"light")};
+if(localStorage.getItem("theme")==="dark")document.getElementById("themeBtn").click();
+
+populateTypes();resetVoucherForm();renderDashboard();renderAccounts();renderParties();renderCashBank();generateReports();renderLedger();renderAudit();
+</script>
+</body>
+</html>
